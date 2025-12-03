@@ -6,9 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using BookLendingSystem.Domain.Entities;
 using BookLendingSystem.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookLendingSystem.Domain.Entities
 {
+    
     public class Book
     {
         public int Id { get; set; }

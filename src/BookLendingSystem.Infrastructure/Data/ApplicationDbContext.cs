@@ -19,7 +19,7 @@ namespace BookLendingSystem.Infrastructure.Data
         public DbSet<Book> Books { get; set; }
         public DbSet<BorrowRecord> BorrowRecords { get; set; }
 
-        // (Fluent API)
+        
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); 

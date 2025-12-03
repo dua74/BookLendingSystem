@@ -1,6 +1,7 @@
 ﻿using BookLendingSystem.Application.DTOs;
-using BookLendingSystem.Application.Interfaces;
-using Microsoft.AspNetCore.Http;
+using BookLendingSystem.Application.Features.Auth.Commands.Login;
+using BookLendingSystem.Application.Features.Auth.Commands.Register;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookLendingSystem.API.Controllers
@@ -9,40 +10,25 @@ namespace BookLendingSystem.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IMediator _mediator;
 
-        private readonly IAuthService _authService;
-
-        public AuthController(IAuthService authService)
+        public AuthController(IMediator mediator)
         {
-            _authService = authService;
+            _mediator = mediator;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto model)
+        public async Task<IActionResult> Register([FromBody] RegisterCommand command)
         {
-            try
-            {
-                var result = await _authService.RegisterAsync(model);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto model)
+        public async Task<IActionResult> Login([FromBody] LoginCommand command)
         {
-            try
-            {
-                var result = await _authService.LoginAsync(model);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return Unauthorized(ex.Message);
-            }
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
     }
 }

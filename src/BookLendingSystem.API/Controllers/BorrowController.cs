@@ -1,63 +1,54 @@
-﻿using System.Security.Claims;
-using BookLendingSystem.Application.Interfaces;
-using Microsoft.AspNetCore.Http;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using BookLendingSystem.Application.Features.Borrowing.Commands.BorrowBook;
+using BookLendingSystem.Application.Features.Borrowing.Commands.ReturnBook;
+using BookLendingSystem.Application.Features.Borrowing.Queries.GetMyBorrows;
 
 namespace BookLendingSystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    
+    [Authorize] 
     public class BorrowController : ControllerBase
     {
-        private readonly IBorrowService _borrowService;
+        private readonly IMediator _mediator;
 
-        public BorrowController(IBorrowService borrowService)
+        public BorrowController(IMediator mediator)
         {
-            _borrowService = borrowService;
+            _mediator = mediator;
         }
 
+        
         [HttpPost("{bookId}")]
         public async Task<IActionResult> BorrowBook(int bookId)
         {
-            try
-            {
-               
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                var result = await _borrowService.BorrowBookAsync(userId!, bookId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var command = new BorrowBookCommand(userId!, bookId);
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
 
+      
         [HttpPost("return/{borrowId}")]
         public async Task<IActionResult> ReturnBook(int borrowId)
         {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                var result = await _borrowService.ReturnBookAsync(userId!, borrowId);
-
-                if (!result) return BadRequest("Cannot return this book (maybe it's not yours or invalid ID).");
-
-                return Ok("Book returned successfully.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var command = new ReturnBookCommand(userId!, borrowId);
+            var result = await _mediator.Send(command);
+            return Ok(new { Message = "Book returned successfully" });
         }
 
+        
         [HttpGet("my-borrows")]
         public async Task<IActionResult> GetMyBorrows()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var borrows = await _borrowService.GetMyBorrowsAsync(userId!);
-            return Ok(borrows);
+            var query = new GetMyBorrowsQuery(userId!);
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }

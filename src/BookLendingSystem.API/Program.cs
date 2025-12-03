@@ -4,6 +4,7 @@ using BookLendingSystem.Application.Interfaces;
 using BookLendingSystem.Domain.Entities;
 using BookLendingSystem.Infrastructure.Data;
 using BookLendingSystem.Infrastructure.Repositories;
+using BookLendingSystem.Infrastructure.Services;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -27,7 +28,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
-
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BookLendingSystem.Application.Features.Borrowing.Commands.BorrowBook.BorrowBookCommand).Assembly));
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -94,9 +95,8 @@ builder.Services.AddAuthentication(options =>
 
 // Dependency Injection
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IAuthService, BookLendingSystem.Infrastructure.Services.AuthService>();
-builder.Services.AddScoped<IBorrowService, BookLendingSystem.Application.Services.BorrowService>();
-builder.Services.AddScoped<IBookService, BookLendingSystem.Application.Services.BookService>();
+//builder.Services.AddScoped<IAuthService, BookLendingSystem.Infrastructure.Services.AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddAutoMapper(typeof(BookLendingSystem.Application.Mappings.MappingProfile));
 
 // Hangfire Configuration
@@ -137,6 +137,8 @@ if (app.Environment.IsDevelopment())
     }
 }
 
+
+app.UseMiddleware<BookLendingSystem.API.Middlewares.ExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 

@@ -1,5 +1,11 @@
 ﻿using BookLendingSystem.Application.DTOs;
+using BookLendingSystem.Application.Features.Books.Commands.CreateBook;
+using BookLendingSystem.Application.Features.Books.Commands.DeleteBook;
+using BookLendingSystem.Application.Features.Books.Commands.UpdateBook;
+using BookLendingSystem.Application.Features.Books.Queries.GetAllBooks;
+using BookLendingSystem.Application.Features.Books.Queries.GetBookById;
 using BookLendingSystem.Application.Interfaces;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,59 +14,54 @@ namespace BookLendingSystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class BooksController : ControllerBase
     {
+        private readonly IMediator _mediator;
 
-        private readonly IBookService _bookService;
-
-        public BooksController(IBookService bookService)
+        public BooksController(IMediator mediator)
         {
-            _bookService = bookService;
+            _mediator = mediator;
         }
 
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
-            var books = await _bookService.GetAllBooksAsync();
-            return Ok(books);
+            var result = await _mediator.Send(new GetAllBooksQuery());
+            return Ok(result);
         }
 
-   
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetById(int id)
         {
-            var book = await _bookService.GetBookByIdAsync(id);
-            if (book == null) return NotFound();
-            return Ok(book);
+            var result = await _mediator.Send(new GetBookByIdQuery(id));
+            return Ok(result);
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([FromBody] CreateBookDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateBookCommand command)
         {
-            var createdBook = await _bookService.AddBookAsync(dto);
+            var createdBook = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetById), new { id = createdBook.Id }, createdBook);
         }
 
-      
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateBookDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateBookCommand command)
         {
-            var updated = await _bookService.UpdateBookAsync(id, dto);
-            if (!updated) return NotFound();
+            if (id != command.Id) command.Id = id; 
+            await _mediator.Send(command);
             return NoContent();
         }
 
-     
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _bookService.DeleteBookAsync(id);
-            if (!deleted) return NotFound();
+            await _mediator.Send(new DeleteBookCommand(id));
             return NoContent();
         }
     }

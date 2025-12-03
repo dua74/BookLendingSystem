@@ -12,24 +12,32 @@ namespace BookLendingSystem.Infrastructure.Data
     {
         public static async Task SeedAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
-            
+          
             if (!await roleManager.RoleExistsAsync("Admin"))
-            {
                 await roleManager.CreateAsync(new IdentityRole("Admin"));
-            }
 
             if (!await roleManager.RoleExistsAsync("Member"))
-            {
                 await roleManager.CreateAsync(new IdentityRole("Member"));
-            }
 
           
-            var adminUser = await userManager.FindByEmailAsync("admin@example.com");
+            var adminEmail = "admin@booklending.com";
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
-           
-            if (adminUser != null)
+            if (adminUser == null)
             {
-                if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+                
+                adminUser = new ApplicationUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    FullName = "System Administrator",
+                    EmailConfirmed = true
+                };
+
+            
+                var result = await userManager.CreateAsync(adminUser, "Admin@12345");
+
+                if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(adminUser, "Admin");
                 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BookLendingSystem.Application.Interfaces
 {
-     // T here means any class (Book, BorrowRecord, etc.)
+    
     public interface IRepository<T> where T : class
     {
         Task<T?> GetByIdAsync(int id);
@@ -17,7 +17,8 @@ namespace BookLendingSystem.Application.Interfaces
         Task DeleteAsync(T entity);
 
 
-        Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate);
+        Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
+        
     }
 
 }
